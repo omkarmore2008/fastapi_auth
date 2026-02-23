@@ -1,0 +1,95 @@
+Metadata-Version: 2.4
+Name: fastapi-auth-template
+Version: 0.1.0
+Summary: Reusable FastAPI authentication template with RBAC, Alembic, and AWS S3.
+Requires-Python: >=3.11
+Description-Content-Type: text/markdown
+Requires-Dist: fastapi>=0.116.0
+Requires-Dist: uvicorn[standard]>=0.35.0
+Requires-Dist: sqlalchemy>=2.0.36
+Requires-Dist: asyncpg>=0.30.0
+Requires-Dist: alembic>=1.14.0
+Requires-Dist: pydantic>=2.10.0
+Requires-Dist: pydantic-settings>=2.7.0
+Requires-Dist: python-jose[cryptography]>=3.3.0
+Requires-Dist: passlib[argon2]>=1.7.4
+Requires-Dist: redis>=5.2.1
+Requires-Dist: boto3>=1.36.0
+Requires-Dist: python-multipart>=0.0.20
+Requires-Dist: email-validator>=2.2.0
+Requires-Dist: httpx>=0.28.1
+Provides-Extra: dev
+Requires-Dist: pytest>=8.3.4; extra == "dev"
+Requires-Dist: pytest-asyncio>=0.25.0; extra == "dev"
+Requires-Dist: fakeredis>=2.28.1; extra == "dev"
+Requires-Dist: aiosqlite>=0.20.0; extra == "dev"
+Requires-Dist: ruff>=0.9.0; extra == "dev"
+
+# FastAPI Auth Template
+
+Reusable FastAPI backend template with:
+- user signup + email verification activation
+- login/logout with JWT access+refresh tokens and Redis session invalidation
+- forgot password + reset password
+- OTP email login
+- token verification endpoint
+- users, groups, permissions (RBAC)
+- AWS S3 profile/file upload metadata
+- Alembic migrations
+- Docker Compose stack with PostgreSQL, Redis, and Mailpit
+
+## Stack
+- FastAPI
+- PostgreSQL
+- Alembic
+- Redis
+- Docker + Docker Compose
+- Mailpit (local email testing)
+- AWS S3 (with optional MinIO profile in compose)
+
+## Local Setup (Mac)
+1. Copy env:
+   - `cp .env.example .env`
+2. Install dependencies:
+   - `pip3 install -e .`
+3. Run migrations:
+   - `alembic upgrade head`
+4. Start API:
+   - `uvicorn app.main:app --reload`
+
+## Docker Setup
+1. Copy env:
+   - `cp .env.example .env`
+2. Start stack:
+   - `docker compose up --build`
+3. Open:
+   - API docs: `http://localhost:8000/docs`
+   - Mailpit UI: `http://localhost:8025`
+
+## Alembic Commands
+- Create revision:
+  - `alembic revision -m "your_message"`
+- Autogenerate revision:
+  - `alembic revision --autogenerate -m "your_message"`
+- Upgrade DB:
+  - `alembic upgrade head`
+- Downgrade one revision:
+  - `alembic downgrade -1`
+
+## Test
+- `pip3 install -e .[dev]`
+- `pytest -q`
+
+## API Endpoints
+- `POST /api/v1/auth/signup`
+- `POST /api/v1/auth/verify-email`
+- `POST /api/v1/auth/login`
+- `POST /api/v1/auth/logout`
+- `POST /api/v1/auth/forgot-password`
+- `POST /api/v1/auth/reset-password`
+- `POST /api/v1/auth/request-otp`
+- `POST /api/v1/auth/login-otp`
+- `GET /api/v1/auth/verify-token`
+- `GET /api/v1/users/me`
+- `GET /api/v1/users/me/permissions`
+- `POST /api/v1/users/me/profile-picture`

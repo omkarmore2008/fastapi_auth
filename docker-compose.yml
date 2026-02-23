@@ -1,0 +1,88 @@
+services:
+  api:
+    build: .
+    container_name: fastapi-auth-api
+    env_file:
+      - .env
+    ports:
+      - "${API_HOST_PORT}:8000"
+    depends_on:
+      - postgres
+      - redis
+      - mailpit
+    command: >
+      sh -c "uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload"
+    volumes:
+      - ./:/app
+
+  postgres:
+    image: postgres:16
+    container_name: fastapi-auth-postgres
+    env_file:
+      - .env
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    ports:
+      - "${POSTGRES_HOST_PORT}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  redis:
+    image: redis:7
+    container_name: fastapi-auth-redis
+    env_file:
+      - .env
+    ports:
+      - "${REDIS_HOST_PORT}:6379"
+
+  mailpit:
+    image: axllent/mailpit:v1.21
+    container_name: fastapi-auth-mailpit
+    env_file:
+      - .env
+    ports:
+      - "${MAILPIT_SMTP_HOST_PORT}:1025"
+      - "${MAILPIT_UI_HOST_PORT}:8025"
+
+  migration-generate:
+    build: .
+    container_name: fastapi-auth-migration-generate
+    env_file:
+      - .env
+    depends_on:
+      - postgres
+    command: >
+      sh -c "alembic revision --autogenerate -m \"${MIGRATION_MESSAGE}\""
+    volumes:
+      - ./:/app
+
+  migration-apply:
+    build: .
+    container_name: fastapi-auth-migration-apply
+    env_file:
+      - .env
+    depends_on:
+      - postgres
+    command: >
+      sh -c "alembic upgrade head"
+    volumes:
+      - ./:/app
+
+  minio:
+    image: minio/minio:latest
+    container_name: fastapi-auth-minio
+    profiles: ["local-s3"]
+    env_file:
+      - .env
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+    command: server /data --console-address ":9001"
+    ports:
+      - "${MINIO_API_HOST_PORT}:9000"
+      - "${MINIO_CONSOLE_HOST_PORT}:9001"
+
+volumes:
+  postgres_data:
